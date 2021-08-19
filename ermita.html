@@ -1,0 +1,295 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width" http-equiv="content-type" content="text/html" charset="UTF-8" />
+
+  <!--OL6-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css"
+    type="text/css">
+
+  <!--jQuery-->
+  <link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/jquery-ui-1.12.1.css">
+  <link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/miniColors/jquery.minicolors.css">
+
+  <!--OWN-->
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+    }
+
+    .map {
+      height: 800px;
+      width: 800px;
+      overflow: hidden !important;
+    }
+
+    body,
+    html {
+      height: 100%;
+      overflow: hidden !important;
+    }
+
+    .TR3 {
+      height: 100%;
+      width: 100%;
+    }
+
+    .tools {
+      font: 0.7em verdana;
+    }
+
+    #map canvas {
+      top: -250px;
+      /*= width map/2 - width dialog map/2*/
+      left: -250px !important;
+    }
+  </style>
+
+  <!--jQuery-->
+  <script type="text/javascript" src="../TR3-pack/jquery/jquery-3.4.1.min.js"></script>
+  <script type="text/javascript" src="../TR3-pack/jquery/jquery-ui.min.js"></script>
+
+  <script type="text/javascript" src="../TR3-pack/jquery/miniColors/jquery.minicolors.min.js"></script>
+
+  <!--OL6-->
+  <script type="text/javascript"
+    src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+
+  <!--TR3 ../TR3-min/TR3.debug.js https://terre3.es/API/TR3.js-->
+  <script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
+
+  <script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
+
+  <!--proj4-->
+  <script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
+  <script type="text/javascript" src="proj4js/25830.js"></script>
+
+  <title>Ermita Humosa demo</title>
+</head>
+
+<body>
+  <div id="map" class="map"></div>
+  <div id="TR3" class="TR3"></div>
+  <div id="tools" class="tools"></div>
+  <div id="progress" style="display:none"></div>
+  <script type="module">
+    const TR3cfg = new Array();
+
+    import * as THREE from '../TR3-pack/THREE/three.module.js';
+    import { OrbitControls } from '../TR3-pack/THREE/OrbitControls.js';
+    import { TransformControls } from '../TR3-pack/THREE/TransformControls.js';
+    import { SkeletonUtils } from '../TR3-pack/THREE/SkeletonUtils.js';
+    import { BufferGeometryUtils } from '../TR3-pack/THREE/BufferGeometryUtils.js';
+    import { GLTFExporter } from '../TR3-pack/THREE/GLTFExporter.js';
+    import { GLTFLoader } from '../TR3-pack/THREE/GLTFLoader.js';
+    import { IFCLoader } from '../TR3-pack/THREE/IFCLoader.js';
+    import { Sky } from '../TR3-pack/THREE/Sky.js';
+    TR3cfg.THREE = THREE;
+    TR3cfg.OrbitControls = OrbitControls;
+    TR3cfg.TransformControls = TransformControls;
+    TR3cfg.SkeletonUtils = SkeletonUtils;
+    TR3cfg.BufferGeometryUtils = BufferGeometryUtils;
+    TR3cfg.GLTFExporter = GLTFExporter;
+    TR3cfg.GLTFLoader = GLTFLoader;
+    TR3cfg.IFCLoader = IFCLoader;
+    TR3cfg.Sky = Sky;
+
+    ol.proj.proj4.register(proj4);//ol v5.0.0
+    const projection = ol.proj.get("EPSG:25830");
+    projection.setExtent([-1500000, 3000000, 2000000, 5000000]);
+
+    const osmLayer = new ol.layer.Tile({
+      source: new ol.source.OSM({ crossOrigin: 'anonymous' })
+    })
+    const coordsOBJ = [476440.6, 4486182.468/*,606.65*/];
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        osmLayer
+      ],
+      view: new ol.View({
+        center: coordsOBJ,
+        //maxZomm: 12,
+        zoom: 12,
+        projection: projection
+      })
+    });
+
+    TR3.setLoader('../TR3-pack/', TR3cfg);
+    document.getElementById('tools').innerHTML = TR3.setPanel();
+    TR3.setOpts({ imgControl: false, autoRotate: true });
+
+
+    $("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, title: 'Herramientas', width: 215 });
+    $('#map').dialog({ position: { my: "left top", at: "left top", of: window }, title: 'Mapa', width: 300, height: 300 });
+
+    // find the titlebar
+    var dlgtb = $("#map").dialog("instance").uiDialogTitlebar;
+    // add the button to titlebar    
+    dlgtb.append("<button id='btnExternal' style='right:26px;position:absolute'></button>");
+    // make it an button    
+    $("#btnExternal").button({
+      icon: "ui-icon-min",
+      showLabel: false,
+    });
+    // add click handler
+    $("#btnExternal").click(function () {
+      if ($('#map')[0].style.display == 'block' || $('#map')[0].style.display == '') { $('#map')[0].style.display = 'none' } else { $('#map')[0].style.display = 'block' }
+    });
+
+    function setTR3() {
+      var bbox = map.getView().calculateExtent(map.getSize());
+      var code = map.getView().getProjection().getCode();
+
+
+      var desty = document.getElementById('TR3');
+      var oriAux = $('#map').find('canvas');
+      var ori = oriAux[0];
+
+      var TR3pms = {
+        ori: ori,
+        desty: desty,
+        bbox: bbox,
+        projCode: code
+      };
+      TR3.setStart(TR3pms);
+      TR3.setLookAtini(5, 100);
+      if (isFinite(ol.extent.getIntersection(bbox, [coordsOBJ[0], coordsOBJ[1], coordsOBJ[0], coordsOBJ[1]])[0])) {
+
+        var TXTpms = {
+          text: '      Ermita Humosa',
+          font: { fontSize: 19, backgroundColor: { r: 200, g: 250, b: 200, a: 0.8 }, },
+          pos: { x: coordsOBJ[0], y: coordsOBJ[1], z: 620 },
+          canvas: { scale: 20, borderColor: { r: 100, g: 200, b: 100, a: 1.0 } },
+          center: true
+        };
+
+        var textSprite = TR3.makeTextSprite(TXTpms);
+        TR3.scene.add(textSprite);
+
+        var OBJ1pms = {
+          src: "obj3d/ermita.glb",
+          pos: [coordsOBJ[0], coordsOBJ[1], 606.3],
+          scale: [14, 14, 14],
+          slctItem: "http://oa.upm.es/47389/"
+        };
+
+        TR3.loadFile(OBJ1pms).then(function (obj, shadow) {
+          TR3.scene.add(obj);
+        });
+
+        TR3.setOpts({ autoRotate: true });
+
+        TR3.map.addEventListener("TR3-onIntersectEvClick",
+          function (req) {
+            window.open(req.detail.slctItem, "_blank");
+          }
+        );
+      }
+    }
+
+    setTimeout(function () {
+      map.on('moveend', setTR3);
+    }, 500);
+
+    // https://openlayers.org/en/latest/examples/tile-load-events.html
+    /**
+     * Renders a progress bar.
+     * @param {HTMLElement} el The target element.
+     * @constructor
+     */
+    function Progress(el) {
+      this.el = el;
+      this.loading = 0;
+      this.loaded = 0;
+    }
+
+    /**
+     * Increment the count of loading tiles.
+     */
+    Progress.prototype.addLoading = function () {
+      if (this.loading === 0) {
+        this.show();
+      }
+      ++this.loading;
+      this.update();
+    };
+
+    /**
+     * Increment the count of loaded tiles.
+     */
+    Progress.prototype.addLoaded = function () {
+      const this_ = this;
+      setTimeout(function () {
+        ++this_.loaded;
+        this_.update();
+      }, 100);
+    };
+
+    /**
+     * Update the progress bar.
+     */
+    Progress.prototype.update = function () {
+      const width = ((this.loaded / this.loading) * 100).toFixed(1) + '%';
+      this.el.style.width = width;
+      if (this.loading === this.loaded) {
+        this.loading = 0;
+        this.loaded = 0;
+        const this_ = this;
+        setTimeout(function () {
+          this_.hide();
+        }, 500);
+      }
+    };
+
+    /**
+     * Show the progress bar.
+     */
+    Progress.prototype.show = function () {
+      this.el.style.visibility = 'visible';
+    };
+
+    /**
+     * Hide the progress bar.
+     */
+    Progress.prototype.hide = function () {
+      if (this.loading === this.loaded) {
+        this.el.style.visibility = 'hidden';
+        this.el.style.width = 0;
+      }
+    };
+
+    /**
+     * Update the progress bar.
+     */
+    Progress.prototype.update = function () {
+      const width = ((this.loaded / this.loading) * 100).toFixed(1) + '%';
+      this.el.style.width = width;
+      if (this.loading === this.loaded) {
+        this.loading = 0;
+        this.loaded = 0;
+        const this_ = this;
+        setTimeout(function () {
+          setTR3();
+        }, 500);
+      }
+    };
+
+    const progress = new Progress(document.getElementById('progress'));
+    osmLayer.getSource().on('tileloadstart', function () {
+      progress.addLoading();
+    });
+
+    osmLayer.getSource().on('tileloadend', function () {
+      progress.addLoaded();
+    });
+    osmLayer.getSource().on('tileloaderror', function () {
+      progress.addLoaded();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<head>
+	<meta charset=utf-8 />
+	<title>Example Leaflet</title>
+	<meta name="viewport" content="width=device-width" http-equiv="content-type" content="text/html" charset="UTF-8" />
+
+	<!--Leaflet 1.0.2-->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+	<!--jQuery-->
+	<link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/jquery-ui-1.12.1.css">
+	<link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/miniColors/jquery.minicolors.css">
+
+	<!--OWN-->
+	<style>
+		body,
+		html {
+			margin: 0;
+			padding: 0;
+		}
+
+		.map {
+			height: 600px;
+			width: 600px;
+			float: left;
+		}
+
+		.TR3 {
+			height: 600px;
+			width: 600px;
+			float: left;
+		}
+
+		.tools {
+			font: 0.7em verdana;
+		}
+	</style>
+
+	<!--Leaflet 1.0.2-->
+	<script type="text/javascript" src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+	<!--jQuery-->
+	<script type="text/javascript" src="../TR3-pack/jquery/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="../TR3-pack/jquery/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="../TR3-pack/jquery/miniColors/jquery.minicolors.min.js"></script>
+
+	<!--TR3 ../TR3-min/TR3.debug.js https://terre3.es/API/TR3.js-->
+	<script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
+	<script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
+
+	<!--Plugin Proj4Leaflet-->
+	<script type="text/javascript" src="proj4js/proj4-compressed.js"></script>
+
+	<!--html2canvas-->
+	<script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+</head>
+
+<body>
+
+	<div id="map" class="map"> </div>
+	<div id="TR3" class="TR3"></div>
+	<div id="tools" class="tools"></div>
+	<div id="progress" style="display:none"></div>
+	<script type="module">
+		const TR3cfg = new Array();
+
+		import * as THREE from '../TR3-pack/THREE/three.module.js';
+		import { OrbitControls } from '../TR3-pack/THREE/OrbitControls.js';
+		import { TransformControls } from '../TR3-pack/THREE/TransformControls.js';
+		import { SkeletonUtils } from '../TR3-pack/THREE/SkeletonUtils.js';
+		import { BufferGeometryUtils } from '../TR3-pack/THREE/BufferGeometryUtils.js';
+		import { GLTFExporter } from '../TR3-pack/THREE/GLTFExporter.js';
+		import { GLTFLoader } from '../TR3-pack/THREE/GLTFLoader.js';
+		import { IFCLoader } from '../TR3-pack/THREE/IFCLoader.js';
+		import { Sky } from '../TR3-pack/THREE/Sky.js';
+		TR3cfg.THREE = THREE;
+		TR3cfg.OrbitControls = OrbitControls;
+		TR3cfg.TransformControls = TransformControls;
+		TR3cfg.SkeletonUtils = SkeletonUtils;
+		TR3cfg.BufferGeometryUtils = BufferGeometryUtils;
+		TR3cfg.GLTFExporter = GLTFExporter;
+		TR3cfg.GLTFLoader = GLTFLoader;
+		TR3cfg.IFCLoader = IFCLoader;
+		TR3cfg.Sky = Sky;
+		const map = new L.map('map', {
+			center: [40, -4],
+			zoom: 6.5
+		}).on('moveend', setTR3);
+
+
+		const layer = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			continuousWorld: true,
+			crossOrigin: 'anonymous',
+			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+		}).addTo(map).on('load', setTR3);
+
+		TR3.setLoader('../TR3-pack/', TR3cfg);
+		document.getElementById('tools').innerHTML = TR3.setPanel();
+
+		$("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, width: 215 });
+
+		function setTR3() {
+			setTimeout(function () {
+				html2canvas(document.querySelector("#map"), {
+					useCORS: true,
+					ignoreElements: function (element) {
+						/*Remove all elements with class="MyClassNameHere" or 'MyElementIdHere' == element.id*/
+						if ('imgErrTR3evt' == element.id) {
+							return true;
+						}
+						if (element.classList.contains('leaflet-control-container')) {
+							return true;
+						}
+					}
+				}).then(
+					function (ori) {
+
+						const bbox = map.getBounds();
+						const desty = document.getElementById('TR3');
+						const crsID = 'EPSG:3857';
+
+						const c1_25830 = proj4(proj4.defs('EPSG:4326'), proj4.defs(crsID), [bbox.getWest(), bbox.getSouth()]);
+						const c2_25830 = proj4(proj4.defs('EPSG:4326'), proj4.defs(crsID), [bbox.getEast(), bbox.getNorth()]);
+
+						const TR3pms = {
+							ori: ori,
+							desty: desty,
+							bbox: [c1_25830[0], c1_25830[1], c2_25830[0], c2_25830[1]],
+							projCode: crsID
+						};
+
+						TR3.setStart(TR3pms);
+					}
+				);
+			}, 1000);
+		}
+
+	</script>
+</body>
+
+</html>

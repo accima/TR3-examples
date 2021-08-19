@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<head>
+	<meta charset=utf-8 />
+	<title>Example Leaflet</title>
+	<meta name="viewport" content="width=device-width" http-equiv="content-type" content="text/html" charset="UTF-8" />
+
+	<!--Leaflet 1.0.2-->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+	<!--jQuery-->
+	<link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/jquery-ui-1.12.1.css">
+	<link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/miniColors/jquery.minicolors.css">
+
+	<!--OWN-->
+	<style>
+		body,
+		html {
+			margin: 0;
+			padding: 0;
+		}
+
+		.map {
+			height: 600px;
+			width: 600px;
+			float: left;
+		}
+
+		.TR3 {
+			height: 600px;
+			width: 600px;
+			float: left;
+		}
+
+		.tools {
+			font: 0.7em verdana;
+		}
+	</style>
+
+	<!--Leaflet 1.0.2-->
+	<script type="text/javascript" src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+	<!--jQuery-->
+	<script type="text/javascript" src="../TR3-pack/jquery/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="../TR3-pack/jquery/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="../TR3-pack/jquery/miniColors/jquery.minicolors.min.js"></script>
+
+	<!--TR3 ../TR3-min/TR3.debug.js https://terre3.es/API/TR3.js-->
+	<script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
+	<script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
+
+	<!--Plugin Proj4Leaflet-->
+	<script type="text/javascript" src="proj4js/proj4-compressed.js"></script>
+	<script type="text/javascript" src="proj4js/proj4leaflet.js"></script>
+
+	<!--html2canvas-->
+	<script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+</head>
+
+<body>
+
+	<div id="map" class="map"> </div>
+	<div id="TR3" class="TR3"></div>
+	<div id="tools" class="tools"></div>
+	<div id="progress" style="display:none"></div>
+	<script type="module">
+		const TR3cfg = new Array();
+
+		import * as THREE from '../TR3-pack/THREE/three.module.js';
+		import { OrbitControls } from '../TR3-pack/THREE/OrbitControls.js';
+		import { TransformControls } from '../TR3-pack/THREE/TransformControls.js';
+		import { SkeletonUtils } from '../TR3-pack/THREE/SkeletonUtils.js';
+		import { BufferGeometryUtils } from '../TR3-pack/THREE/BufferGeometryUtils.js';
+		import { GLTFExporter } from '../TR3-pack/THREE/GLTFExporter.js';
+		import { GLTFLoader } from '../TR3-pack/THREE/GLTFLoader.js';
+		import { IFCLoader } from '../TR3-pack/THREE/IFCLoader.js';
+		import { Sky } from '../TR3-pack/THREE/Sky.js';
+		TR3cfg.THREE = THREE;
+		TR3cfg.OrbitControls = OrbitControls;
+		TR3cfg.TransformControls = TransformControls;
+		TR3cfg.SkeletonUtils = SkeletonUtils;
+		TR3cfg.BufferGeometryUtils = BufferGeometryUtils;
+		TR3cfg.GLTFExporter = GLTFExporter;
+		TR3cfg.GLTFLoader = GLTFLoader;
+		TR3cfg.IFCLoader = IFCLoader;
+		TR3cfg.Sky = Sky;
+
+		// Obtención del CRS
+		const crsID = 'EPSG:25830';
+		const crs = new L.Proj.CRS(crsID,
+			'+proj=utm +zone=30 +ellps=GRS80 +units=m +no_defs ', //http://spatialreference.org/ref/epsg/25830/proj4/
+			{
+				resolutions: [2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1, 0.5],
+				origin: [-1500000, 5000000],
+				//resolutions: [13671.875,6835.9375,3417.96875,1708.984375,854.4921875,427.24609375,213.623046875,106.8115234375,53.40576171875,26.702880859375,13.3514404296875,6.67572021484375,3.337860107421875,1.6689300537109375,0.8344650268554688,0.4172325134277344,0.2086162567138672,0.1043081283569336,0.0521540641784668,0.0260770320892334,0.0130385160446167,0.00651925802230835,0.003259629011154175,0.0016298145055770874,0.0008149072527885437,0.00040745362639427185,0.00020372681319713593,0.00010186340659856796,0.00005093170329928398,0.00002546585164964199,0.000012732925824820995,0.000006366462912410498,0.000003183231456205249,0.0000015916157281026244,7.958078640513122e-7,3.979039320256561e-7,1.9895196601282805e-7,9.947598300641403e-8,4.973799150320701e-8,2.4868995751603507e-8,1.2434497875801753e-8,6.217248937900877e-9,3.1086244689504383e-9]
+
+			});
+
+		const map = new L.map('map', {
+			crs: crs,
+			center: [40, -4],
+			zoom: 1
+		}).on('moveend', setTR3);
+
+		const layer = new L.tileLayer.wms("http://www.ign.es/wms-inspire/mapa-raster", {
+			layers: 'mtn_rasterizado',
+			crs: crs,
+			format: 'image/jpeg',
+			crossOrigin: 'anonymous',
+			continuousWorld: true,
+			attribution: '© Instituto Geográfico Nacional de España'
+		}).addTo(map).on('load', setTR3);
+
+		TR3.setLoader('../TR3-pack/', TR3cfg);
+		document.getElementById('tools').innerHTML = TR3.setPanel();
+
+		$("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, width: 215 });
+
+		function setTR3() {
+			setTimeout(function () {
+				html2canvas(document.querySelector("#map"), {
+					useCORS: true,
+					ignoreElements: function (element) {
+						/*Remove all elements with class="MyClassNameHere" or 'MyElementIdHere' == element.id*/
+						if ('imgErrTR3evt' == element.id) {
+							return true;
+						}
+						if (element.classList.contains('leaflet-control-container')) {
+							return true;
+						}
+					}
+				}).then(
+					function (ori) {
+
+						const bbox = map.getBounds();
+						const desty = document.getElementById('TR3');
+
+						const c1_25830 = proj4(proj4.defs('EPSG:4326'), proj4.defs(crsID), [bbox.getWest(), bbox.getSouth()]);
+						const c2_25830 = proj4(proj4.defs('EPSG:4326'), proj4.defs(crsID), [bbox.getEast(), bbox.getNorth()]);
+
+						const TR3pms = {
+							ori: ori,
+							desty: desty,
+							bbox: [c1_25830[0], c1_25830[1], c2_25830[0], c2_25830[1]],
+							projCode: crsID
+						};
+
+						TR3.setStart(TR3pms);
+					}
+				);
+			}, 1000);
+		}
+
+	</script>
+</body>
+
+</html>
