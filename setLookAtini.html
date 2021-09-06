@@ -3,7 +3,8 @@
 
 <head>
   <meta name="viewport" content="width=device-width" http-equiv="content-type" content="text/html" charset="UTF-8" />
-
+  <link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico">
+  
   <!--OL6-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css"
     type="text/css">
@@ -21,30 +22,19 @@
     }
 
     .map {
-      height: 800px;
-      width: 800px;
-      overflow: hidden !important;
-    }
-
-    body,
-    html {
-      height: 100%;
-      overflow: hidden !important;
+      height: 600px;
+      width: 600px;
+      float: left;
     }
 
     .TR3 {
-      height: 100%;
-      width: 100%;
+      height: 600px;
+      width: 600px;
+      float: left;
     }
 
     .tools {
       font: 0.7em verdana;
-    }
-
-    #map canvas {
-      top: -250px;
-      /*= width map/2 - width dialog map/2*/
-      left: -250px !important;
     }
   </style>
 
@@ -60,17 +50,20 @@
 
   <!--TR3 ../TR3-min/TR3.debug.js https://terre3.es/API/TR3.js-->
   <script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
-
   <script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
 
   <!--proj4-->
   <script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
-  <script type="text/javascript" src="proj4js/25830.js"></script>
 
-  <title>Ermita Humosa demo</title>
+  <title>TR3 - setLookAtini</title>
 </head>
 
 <body>
+
+	<h1>TR3 - setLookAtini</h1>
+	<p>Realiza una perspectiva lateral usando parámetros relativos de distancia y altura.</p>
+	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/accima/TR3-examples/blob/main/setLookAtini.html">https://github.com/accima/TR3-examples/blob/main/setLookAtini.html</a></p>
+	
   <div id="map" class="map"></div>
   <div id="TR3" class="TR3"></div>
   <div id="tools" class="tools"></div>
@@ -97,98 +90,45 @@
     TR3cfg.IFCLoader = IFCLoader;
     TR3cfg.Sky = Sky;
 
-    ol.proj.proj4.register(proj4);//ol v5.0.0
-    const projection = ol.proj.get("EPSG:25830");
-    projection.setExtent([-1500000, 3000000, 2000000, 5000000]);
-
     const osmLayer = new ol.layer.Tile({
       source: new ol.source.OSM({ crossOrigin: 'anonymous' })
     })
-    const coordsOBJ = [476440.6, 4486182.468/*,606.65*/];
+
     const map = new ol.Map({
       target: 'map',
       layers: [
         osmLayer
       ],
       view: new ol.View({
-        center: coordsOBJ,
-        //maxZomm: 12,
-        zoom: 12,
-        projection: projection
+        center: [-411990, 4933238],
+        zoom: 6.5
       })
     });
 
     TR3.setLoader('../TR3-pack/', TR3cfg);
     document.getElementById('tools').innerHTML = TR3.setPanel();
-    TR3.setOpts({ imgControl: false, autoRotate: true });
-
-
-    $("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, title: 'Herramientas', width: 215 });
-    $('#map').dialog({ position: { my: "left top", at: "left top", of: window }, title: 'Mapa', width: 300, height: 300 });
-
-    // find the titlebar
-    var dlgtb = $("#map").dialog("instance").uiDialogTitlebar;
-    // add the button to titlebar    
-    dlgtb.append("<button id='btnExternal' style='right:26px;position:absolute'></button>");
-    // make it an button    
-    $("#btnExternal").button({
-      icon: "ui-icon-min",
-      showLabel: false,
-    });
-    // add click handler
-    $("#btnExternal").click(function () {
-      if ($('#map')[0].style.display == 'block' || $('#map')[0].style.display == '') { $('#map')[0].style.display = 'none' } else { $('#map')[0].style.display = 'block' }
-    });
+    $("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, width: 215 });
 
     function setTR3() {
-      var bbox = map.getView().calculateExtent(map.getSize());
-      var code = map.getView().getProjection().getCode();
+
+      const bbox = map.getView().calculateExtent(map.getSize());
+      const code = map.getView().getProjection().getCode();
 
 
-      var desty = document.getElementById('TR3');
-      var oriAux = $('#map').find('canvas');
-      var ori = oriAux[0];
+      const desty = document.getElementById('TR3');
+      const ori = document.getElementsByTagName('CANVAS')[0];
 
-      var TR3pms = {
+      const TR3pms = {
         ori: ori,
         desty: desty,
         bbox: bbox,
         projCode: code
       };
-      TR3.setStart(TR3pms);
-      TR3.setLookAtini(5, 100);
-      if (isFinite(ol.extent.getIntersection(bbox, [coordsOBJ[0], coordsOBJ[1], coordsOBJ[0], coordsOBJ[1]])[0])) {
 
-        var TXTpms = {
-          text: '      Ermita Humosa',
-          font: { fontSize: 19, backgroundColor: { r: 200, g: 250, b: 200, a: 0.8 }, },
-          pos: { x: coordsOBJ[0], y: coordsOBJ[1], z: 620 },
-          canvas: { scale: 20, borderColor: { r: 100, g: 200, b: 100, a: 1.0 } },
-          center: true
-        };
-
-        var textSprite = TR3.makeTextSprite(TXTpms);
-        TR3.scene.add(textSprite);
-
-        var OBJ1pms = {
-          src: "obj3d/ermita.glb",
-          pos: [coordsOBJ[0], coordsOBJ[1], 606.3],
-          scale: [14, 14, 14],
-          slctItem: "http://oa.upm.es/47389/"
-        };
-
-        TR3.loadFile(OBJ1pms).then(function (obj, shadow) {
-          TR3.scene.add(obj);
-        });
-
-        TR3.setOpts({ autoRotate: true });
-
-        TR3.map.addEventListener("TR3-onIntersectEvClick",
-          function (req) {
-            window.open(req.detail.slctItem, "_blank");
-          }
-        );
-      }
+      TR3.setStart(TR3pms).then(function (obj) {
+        //obj.material.wireframe = true;
+      });
+      TR3.setLookAtini(50, 3);
     }
 
     setTimeout(function () {

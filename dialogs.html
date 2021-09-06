@@ -54,10 +54,13 @@
 	<!--proj4-->
 	<script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
 
-	<title>Dialogs Jquery example</title>
+	<title>Dialogs Jquery</title>
 </head>
 
 <body>
+	<h1>TR3 - Dialog</h1>
+	<p>Ubicamos los mapas sobre dialogs de jQuery probando distintas resoluciones.</p>
+	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/accima/TR3-examples/blob/main/dialogs.html">https://github.com/accima/TR3-examples/blob/main/dialogs.html</a></p>
 	<div id="map" class="map"></div>
 	<div id="TR3" class="TR3"></div>
 	<div id="tools" class="tools"></div>
@@ -105,7 +108,7 @@
 
 		$("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, width: 215 });
 		$("#TR3").dialog({ width: 500, height: 500 });
-		$("#map").dialog({ position: { my: "left top", at: "left top", of: window }, width: 600, height: 600 });
+		$("#map").dialog({ position: { my: "left center", at: "left center", of: window }, width: 600, height: 600 });
 
 		function setTR3() {
 

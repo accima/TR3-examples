@@ -3,7 +3,7 @@
 
 <head>
   <meta name="viewport" content="width=device-width" http-equiv="content-type" content="text/html" charset="UTF-8" />
-
+  <link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico">
   <!--OL6-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css"
     type="text/css">
@@ -55,10 +55,15 @@
   <script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
   <script type="text/javascript" src="proj4js/25830.js"></script>
 
-  <title>OpenLayers example</title>
+  <title>TR3 - OpenLayers EPSG</title>
 </head>
 
 <body>
+
+	<h1>TR3 - OpenLayers EPSG</h1>
+	<p>Integración sobre openlayers 6 con sistema EPSG:25830.</p>
+	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/accima/TR3-examples/blob/main/ol6-EPSG.html">https://github.com/accima/TR3-examples/blob/main/ol6-EPSG.html</a></p>
+  
   <div id="map" class="map"></div>
   <div id="TR3" class="TR3"></div>
   <div id="tools" class="tools"></div>
@@ -127,7 +132,7 @@
       TR3.setStart(TR3pms).then(function (obj) {
         //obj.material.wireframe = true;
       });
-      TR3.setLookAtini(50, 3);
+
     }
 
     setTimeout(function () {
