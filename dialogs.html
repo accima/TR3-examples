@@ -6,7 +6,7 @@
 
 	<!--OL6-->
 	<link rel="stylesheet"
-		href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.css" type="text/css">
+		href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css" type="text/css">
 
 	<!--jQuery-->
 	<link rel="stylesheet" type="text/css" href="../TR3-pack/jquery/jquery-ui-1.12.1.css">
@@ -45,11 +45,12 @@
 
 	<!--OL6-->
 	<script type="text/javascript"
-		src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.js"></script>
+		src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
 
-	<!--TR3 ../TR3-pack/TR3.debug.js https://terre3.es/API/TR3.js-->
 	<script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
 	<script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
+	<script type='text/javascript' src='../TR3-pack/AMMO/ammo.js'></script>
+
 
 	<!--proj4-->
 	<script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
@@ -66,26 +67,29 @@
 	<div id="tools" class="tools"></div>
 	<div id="progress" style="display:none"></div>
 	<script type="module">
-		const TR3cfg = new Array();
+		import * as THREE from '../TR3-pack/THREE/build/three.module.js';
+		import { OrbitControls } from '../TR3-pack/THREE/controls/OrbitControls.js';
+		import { TransformControls } from '../TR3-pack/THREE/controls/TransformControls.js';
+		import { clone } from '../TR3-pack/THREE/utils/SkeletonUtils.js';
+		import { GLTFExporter } from '../TR3-pack/THREE/exporters/GLTFExporter.js';
+		import { GLTFLoader } from '../TR3-pack/THREE/loaders/GLTFLoader.js';
+		import { IFCLoader } from '../TR3-pack/THREE/loaders/IFCLoader.js';
+		import { FontLoader } from '../TR3-pack/THREE/loaders/FontLoader.js';
+		import { TextGeometry } from '../TR3-pack/THREE/geometries/TextGeometry.js';
+		import { Sky } from '../TR3-pack/THREE/objects/Sky.js';
 
-		import * as THREE from '../TR3-pack/THREE/three.module.js';
-		import { OrbitControls } from '../TR3-pack/THREE/OrbitControls.js';
-		import { TransformControls } from '../TR3-pack/THREE/TransformControls.js';
-		import { SkeletonUtils } from '../TR3-pack/THREE/SkeletonUtils.js';
-		import { BufferGeometryUtils } from '../TR3-pack/THREE/BufferGeometryUtils.js';
-		import { GLTFExporter } from '../TR3-pack/THREE/GLTFExporter.js';
-		import { GLTFLoader } from '../TR3-pack/THREE/GLTFLoader.js';
-		import { IFCLoader } from '../TR3-pack/THREE/IFCLoader.js';
-		import { Sky } from '../TR3-pack/THREE/Sky.js';
-		TR3cfg.THREE = THREE;
-		TR3cfg.OrbitControls = OrbitControls;
-		TR3cfg.TransformControls = TransformControls;
-		TR3cfg.SkeletonUtils = SkeletonUtils;
-		TR3cfg.BufferGeometryUtils = BufferGeometryUtils;
-		TR3cfg.GLTFExporter = GLTFExporter;
-		TR3cfg.GLTFLoader = GLTFLoader;
-		TR3cfg.IFCLoader = IFCLoader;
-		TR3cfg.Sky = Sky;
+		var threeTR3 = new Array();
+
+		threeTR3.THREE = THREE;
+		threeTR3.OrbitControls = OrbitControls;
+		threeTR3.TransformControls = TransformControls;
+		threeTR3.SkeletonUtilsClone = clone;
+		threeTR3.GLTFExporter = GLTFExporter;
+		threeTR3.GLTFLoader = GLTFLoader;
+		threeTR3.IFCLoader = IFCLoader;
+		threeTR3.FontLoader = FontLoader;
+		threeTR3.TextGeometry = TextGeometry;
+		threeTR3.Sky = Sky;
 
 		const osmLayer = new ol.layer.Tile({
 			source: new ol.source.OSM({ crossOrigin: 'anonymous' })
@@ -96,12 +100,12 @@
 				osmLayer
 			],
 			view: new ol.View({
-				center: [-411990, 4933238],
-				zoom: 6.5
+				center: [-630404, 5395748],
+				zoom: 17
 			})
 		});
 
-		TR3.setLoader('../TR3-pack/', TR3cfg);
+		TR3.setLoader('../TR3-pack/', threeTR3);
 		document.getElementById('tools').innerHTML = TR3.setPanel();
 
 		TR3.setOpts({ imgControl: false, autoRotate: true });
@@ -120,7 +124,7 @@
 			const ori = oriAux[oriAux.length - 1];
 
 			const TR3pms = {
-				ori: ori,
+				oriImg: ori,
 				desty: desty,
 				bbox: bbox,
 				projCode: code

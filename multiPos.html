@@ -48,21 +48,23 @@
 	<script type="text/javascript"
 		src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
 
+	<!--TR3-->
 	<script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
 	<script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
 	<script type='text/javascript' src='../TR3-pack/AMMO/ammo.js'></script>
 
+
 	<!--proj4-->
 	<script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
 
-	<title>TR3 - Magnification</title>
+	<title>TR3 - Multiposition example</title>
 </head>
 
 <body style="display:table">
 
-	<h1>TR3 - Magnification</h1>
-	<p>Asignamos un valor de exageración del terreno fijo de x10.</p>
-	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/accima/TR3-examples/blob/main/magnification.html">https://github.com/accima/TR3-examples/blob/main/magnification.html</a></p>
+	<h1>TR3 - Multipos</h1>
+	<p>Función para cargar una serie de objetos idénticos clonándolos por el mapa.</p>
+	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/accima/TR3-examples/blob/main/multiPos.html">https://github.com/accima/TR3-examples/blob/main/multiPos.html</a></p>
 	
 	<div id="map" class="map"></div>
 	<div id="TR3" class="TR3"></div>
@@ -109,21 +111,17 @@
 
 		TR3.setLoader('../TR3-pack/', threeTR3);
 		document.getElementById('tools').innerHTML = TR3.setPanel();
-		TR3.setOpts({ imgControl: false, autoRotate: true, terrain: true });
+		TR3.setOpts({ imgControl: false, autoRotate: true });
 
 		$("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, width: 215 });
 
 		function setTR3() {
-
 			const bbox = map.getView().calculateExtent(map.getSize());
 			const code = map.getView().getProjection().getCode();
-
 
 			const desty = document.getElementById('TR3');
 			const oriAux = document.getElementsByTagName('CANVAS');
 			const ori = oriAux[0];
-
-			TR3.setValues({magnification:2});
 
 			const TR3pms = {
 				oriImg: ori,
@@ -132,10 +130,52 @@
 				projCode: code
 			};
 
-			TR3.setStart(TR3pms).then(function (obj) {
-				//obj.material.wireframe = true;
+			TR3.setStart(TR3pms).then(function () {
+
+				TR3.setLookAtini(70, 20);
+
 			});
-			TR3.setLookAtini(50, 20);
+			
+			const OBJ1pms = {
+				src: "obj3d/tree.glb", 		// Ruta al elemento 3D
+				pos: [	[-630404, 5395748, false],[-630161.857,5395866.173,false],[-630598.508,5395991.250,false],[-630366.868,5395747.871,false],
+						[-630213.286,5395725.259,false],[-630544.337,5395788.275,false],[-630501.772,5395834.672,false],[-630575.240,5395910.555,false]], // Ubicación, con Z false, se coloca sobre el terreno
+				animation: true, 				// Permite ejecutar animación
+				scale: [[10, 10, 10],[10, 10, 10],[10, 10, 10],[10, 10, 10][10, 10, 10],[10, 10, 10],[10, 10, 10],[10, 10, 10]], 			// Escalar elemento 3D
+				slctItem: [true,true,true,true,true,true,true,true], 				// Elemento interactivo
+				aRotate: false, 				// En true el elemento 3D rota entorno al eje Z, si es un número gira un tramo en radianes
+				transform: false, 				// Asigna manejador 3D al elemento 3D transformcontrols
+				isPixSize: false, 				// Los valores de escala son medidas en tamaño pixel
+				persist2Scene: false 			// El elemento 3D permanece siempre en la escena
+			};
+
+			TR3.loadFile(OBJ1pms).then(function (obj) {
+				for(let i=0;i<obj.length;i++){
+					TR3.scene.add(obj[i].scene);
+					TR3.transCtrlsEnabled(obj[i].scene);
+				}
+			});
+
+			TR3.map.addEventListener("TR3-onIntersectEvClick",
+				function (req) {
+					console.log(req);
+					var det = req.detail;
+					if (det.intersect[0]) {
+						var obj = det.intersect[0].object.scene || det.intersect[0].object;
+						while (!obj.TR3) {
+							obj = obj.parent;
+						}
+						TR3.transCtrlsEnabled(obj);
+					}
+				}
+			);
+
+			TR3.map.addEventListener("TR3-onIntersectEvOver",
+				function (req) {
+					console.log(req);
+				}
+			);
+
 		}
 
 		setTimeout(function () {
