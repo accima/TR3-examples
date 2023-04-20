@@ -4,7 +4,6 @@
 <head>
   <meta name="viewport" content="width=device-width" http-equiv="content-type" content="text/html" charset="UTF-8" />
   <link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico">
-  
   <!--OL6-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css"
     type="text/css">
@@ -46,24 +45,26 @@
 
   <!--OL6-->
   <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+    src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.js"></script>
 
   <script type="text/javascript" src="../TR3-pack/TR3.min.js"></script>
   <script type='text/javascript' src='../TR3-pack/TWEEN/tween.min.js'></script>
   <script type='text/javascript' src='../TR3-pack/AMMO/ammo.js'></script>
 
+
   <!--proj4-->
   <script type="text/javascript" src="../TR3-pack/proj4js/proj4.js"></script>
+  <script type="text/javascript" src="proj4js/25830.js"></script>
 
-  <title>TR3 - OpenLayers</title>
+  <title>TR3 - OpenLayers EPSG</title>
 </head>
 
 <body>
 
-	<h1>TR3 - OpenLayers</h1>
-	<p>Integración sencilla sobre el visor de mapas openlayers 6.</p>
-	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/accima/TR3-examples/blob/main/ol6.html">https://github.com/accima/TR3-examples/blob/main/ol6.html</a></p>
-	
+	<h1>TR3 - OpenLayers EPSG</h1>
+	<p>Integración sobre openlayers con sistema EPSG:25830.</p>
+	<p><strong>GitHub</strong> <a target="blank" href="https://github.com/terre3/TR3-examples/blob/main/ol6-EPSG.html">https://github.com/terre3/TR3-examples/blob/main/ol6-EPSG.html</a></p>
+  
   <div id="map" class="map"></div>
   <div id="TR3" class="TR3"></div>
   <div id="tools" class="tools"></div>
@@ -94,21 +95,24 @@
 	threeTR3.TextGeometry = TextGeometry;
 	threeTR3.Sky = Sky;
 
+    ol.proj.proj4.register(proj4);//ol v5.0.0
+    const projection = ol.proj.get("EPSG:25830");
+    projection.setExtent([-1500000, 3000000, 2000000, 5000000]);
+
     const osmLayer = new ol.layer.Tile({
       source: new ol.source.OSM({ crossOrigin: 'anonymous' })
     })
-
     const map = new ol.Map({
       target: 'map',
       layers: [
         osmLayer
       ],
       view: new ol.View({
-        center: [-630404, 5395748],
-        zoom: 17
+        center: [284876, 4825110],
+        zoom: 14,
+        projection: projection
       })
     });
-
     TR3.setLoader('../TR3-pack/', threeTR3);
     document.getElementById('tools').innerHTML = TR3.setPanel();
     $("#tools").dialog({ position: { my: "right top", at: "right top", of: window }, width: 215 });
@@ -122,12 +126,12 @@
       const desty = document.getElementById('TR3');
       const ori = document.getElementsByTagName('CANVAS')[0];
 
-      var TR3pms = {
-		oriImg: ori,
-		desty: desty,
-		bbox: bbox,
-		projCode: code
-	};
+      const TR3pms = {
+        oriImg: ori,
+        desty: desty,
+        bbox: bbox,
+        projCode: code
+      };
 
       TR3.setStart(TR3pms).then(function (obj) {
         //obj.material.wireframe = true;
